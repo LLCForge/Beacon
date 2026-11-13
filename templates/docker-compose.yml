@@ -1,0 +1,23 @@
+# Example: docker compose up -d
+# Put secrets (bot tokens, routing keys, ...) in ./{{bin}}.env (KEY=value lines,
+# never committed) and reference them from the TOML via *_env settings.
+services:
+  {{bin}}:
+    image: ghcr.io/llcforge/{{bin}}:latest
+    # build: .
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    env_file:
+      - path: ./{{bin}}.env
+        required: false
+    volumes:
+      - ./{{bin}}.toml:/etc/{{bin}}/{{bin}}.toml:ro
+      - {{bin}}-data:/data
+    ports:
+      # Metrics + /healthz + /readyz. Bind to loopback; expose deliberately.
+      - "127.0.0.1:{{port_metrics}}:{{port_metrics}}"
+
+volumes:
+  {{bin}}-data:

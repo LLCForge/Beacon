@@ -1,0 +1,58 @@
+# Prometheus alerting rules for {{name}} (generic llcforge-beacon metrics).
+# Load with `rule_files: ["{{bin}}-rules.yml"]` or as a PrometheusRule `spec`.
+# Assumes the scrape job is named "{{bin}}"; adjust the `job` matcher if not.
+groups:
+  - name: {{bin}}.availability
+    rules:
+      - alert: {{formula_class}}Down
+        expr: up{job="{{bin}}"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{name}} is down on {{ $labels.instance }}"
+          description: "The {{name}} metrics endpoint has not been scrapeable for 5 minutes."
+
+      - alert: {{formula_class}}Absent
+        expr: absent(up{job="{{bin}}"})
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No {{name}} targets are being scraped"
+
+  - name: {{bin}}.alert-delivery
+    rules:
+      - alert: {{formula_class}}AlertDeliveryFailing
+        expr: increase(llcforge_beacon_sink_failed_total{tool="{{bin}}"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{name}} cannot deliver alerts to sink {{ $labels.sink }} ({{ $labels.type }})"
+          description: "{{ $value | humanize }} delivery failures in 15 minutes. Undelivered alerts stay queued and are retried."
+
+      - alert: {{formula_class}}AlertsDropped
+        expr: increase(llcforge_beacon_dropped_total{tool="{{bin}}"}[15m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{name}} dropped alerts on {{ $labels.instance }}"
+          description: "Alerts were dropped (intake channel full, queue bound reached or delivery expired)."
+
+      - alert: {{formula_class}}AlertQueueBacklog
+        expr: llcforge_beacon_queue_depth{tool="{{bin}}"} > 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{name}} alert queue backlog: {{ $value }} pending"
+          description: "Alerts are accumulating faster than sinks accept them, or a sink has been down for 15 minutes."
+
+      - alert: {{formula_class}}SinkBacklog
+        expr: llcforge_beacon_sink_queued{tool="{{bin}}"} > 50
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{name}} sink {{ $labels.sink }} has {{ $value }} undelivered alerts"

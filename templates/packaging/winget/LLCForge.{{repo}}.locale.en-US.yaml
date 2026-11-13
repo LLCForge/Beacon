@@ -1,0 +1,18 @@
+# winget default-locale manifest for {{name}}. @VERSION@ is filled in by the release workflow.
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: LLCForge.{{repo}}
+PackageVersion: "@VERSION@"
+PackageLocale: en-US
+Publisher: LLCForge
+PublisherUrl: https://github.com/LLCForge
+PackageName: {{name}}
+PackageUrl: https://github.com/LLCForge/{{repo}}
+License: MIT
+LicenseUrl: https://github.com/LLCForge/{{repo}}/blob/main/LICENSE
+ShortDescription: {{description}}
+Tags:
+  - networking
+  - monitoring
+  - llcforge
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
